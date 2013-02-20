@@ -1,72 +1,50 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+# imported libs
 import mutagen
-
 from mutagen.id3 import ID3
-from mutagen.id3 import TIT2, TALB, TPE1, TPE2, COMM, TCON, TDRC, TRCK, TPOS
+import lib
 
-
+# system libs
+import logging
+import os
 import os.path as Path
 
-import logging
+read_attributes_ID3_map = lib.Attributes().read_attributes_ID3_map
+write_attributes_ID3_map = lib.Attributes().write_attributes_ID3_map
+call_ID3_map = lib.Attributes().call_ID3_map
 
-read_attributes_ID3_map = {
-	"album":"TALB",
-	"albumartist":"TPE2",
-	"artist":"TPE1",
-	"date":"TDRC",
-	"discnumber":"TPOS",
-	"genre":"TCON",
-	"title":"TIT2",
-	"tracknumber":"TRCK",
-	"comment":"COMM::'eng'"
-}
-write_attributes_ID3_map = {
-	"album":"TALB",
-	"albumartist":"TPE2",
-	"artist":"TPE1",
-	"date":"TDRC",
-	"discnumber":"TPOS",
-	"genre":"TCON",
-	"title":"TIT2",
-	"tracknumber":"TRCK",
-	"comment":"COMM"
-}
-call_ID3_map = {
-	"TALB":TALB,
-	"TPE2":TPE2,
-	"TPE1":TPE1,
-	"TDRC":TDRC,
-	"TPOS":TPOS,
-	"TCON":TCON,
-	"TIT2":TIT2,
-	"TRCK":TRCK,
-	"COMM":COMM
-}
 
-class audio:
+class Audio:
 	def __init__(self, filepath):
 		filepath = Path.realpath(filepath)
-		self.attributes = ["album","albumartist","artist","tracknumber","title","genre","date","comment"]
+		self.attributes = ["album","albumartist","artist","comment","date","discnumber","genre","tracknumber","title"]
 		self.file_path = Path.relpath(filepath)
 		self.file_type = self._find_file_type(self.file_path)
 		self.container = self._create_mutagen()
 
 		logging.debug("Mapping file attributes to audio object")
+
 		for attr in self.attributes:
-			setattr(self, attr, self.get_attribute(attr))
+			setattr(self, attr, str(self.get_attribute(attr)))
+
 		logging.debug("Audio object created successfully")
 		return
 
 	def get_attribute(self, attr):
+		logging.debug("get_attribute, "+attr+" from container.")
 		call = attr
 		if self.file_type in ['mp3']:
+			logging.debug("Using ID3 tag references.")
 			call = read_attributes_ID3_map[attr]
 
 		try:
+			logging.debug("Getting attribute, "+attr+".")
 			attr_ret = self.container[call]
+			logging.debug("Attribute retrieved successfully.")
 		except KeyError:
+			logging.debug("Attribute not found, return {null}.")
 			attr_ret = ""
 
 		return attr_ret
@@ -94,7 +72,7 @@ class audio:
 			self.container["COMM"] = call_ID3_map[call](encoding=3, lang=u'eng', desc='desc', text=value)
 		else:
 			self.container[call] = call_ID3_map[call](encoding=3, text=value)
-		self.container.save(v1=1)
+		self.container.save(v1=2)
 		return
 
 
@@ -111,6 +89,3 @@ class audio:
 
 	def _find_file_type(self, filepath):
 		return Path.splitext(Path.basename(filepath))[1].lstrip(".").lower()
-
-
-
