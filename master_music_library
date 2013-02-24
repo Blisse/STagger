@@ -1,4 +1,4 @@
-$$$FNAME:..\Test Music\01 - Only If for a Night.flac
+$$$FNAME:..\Test Music Copy\01 - Only If for a Night.flac
 $[TALB]::[u'Ceremonials']
 $[TPE2]::[u'Florence + The Machine']
 $[TPE1]::[u'Florence + the Machine']
@@ -8,17 +8,17 @@ $[TPOS]::
 $[TCON]::[u'Alternative']
 $[TRCK]::[u'01']
 $[TIT2]::[u'Only If for a Night']
-$$$FNAME:..\Test Music\Invitation\01 - 보여줄게.flac
+$$$FNAME:..\Test Music Copy\Invitation\01 - 보여줄게.flac
 $[TALB]::[u'Invitation']
 $[TPE2]::[u'Ailee']
 $[TPE1]::[u'Ailee']
-$[COMM]::[u'Favourite']
+$[COMM]::
 $[TDRC]::[u'2012']
 $[TPOS]::[u'1']
 $[TCON]::[u'K-Pop']
 $[TRCK]::[u'01']
 $[TIT2]::[u'\ubcf4\uc5ec\uc904\uac8c']
-$$$FNAME:..\Test Music\This Is War\01 - This Is War.mp3
+$$$FNAME:..\Test Music Copy\This Is War\01 - This Is War.mp3
 $[TALB]::This Is War
 $[TPE2]::30 Seconds To Mars
 $[TPE1]::30 Seconds To Mars

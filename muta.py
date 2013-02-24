@@ -4,16 +4,15 @@
 # imported libs
 import mutagen
 from mutagen.id3 import ID3
-import lib
+import Libraries.Attributes as ATTRIBUTES
+import Libraries.Folders as PATHS
+import Strings.Build as BUILD
+
 
 # system libs
 import logging
 import os
 import os.path as Path
-
-read_attributes_ID3_map = lib.Attributes().read_attributes_ID3_map
-write_attributes_ID3_map = lib.Attributes().write_attributes_ID3_map
-call_ID3_map = lib.Attributes().call_ID3_map
 
 
 class Audio:
@@ -21,58 +20,62 @@ class Audio:
 		filepath = Path.realpath(filepath)
 		self.attributes = ["album","albumartist","artist","comment","date","discnumber","genre","tracknumber","title"]
 		self.file_path = Path.relpath(filepath)
-		self.file_type = self._find_file_type(self.file_path)
+		self.file_type = PATHS.find_file_type(self.file_path)
 		self.container = self._create_mutagen()
 
-		logging.debug("Mapping file attributes to audio object")
-
+		logging.debug("Mapping audio container attributes to audio object.")
 		for attr in self.attributes:
-			setattr(self, attr, str(self.get_attribute(attr)))
-
+			setattr(self, attr, self.get_attribute(attr))
 		logging.debug("Audio object created successfully")
 		return
 
 	def get_attribute(self, attr):
-		logging.debug("get_attribute, "+attr+" from container.")
+		logging.debug("Attempting to get attribute "+attr+" from audio container.")
 		call = attr
 		if self.file_type in ['mp3']:
-			logging.debug("Using ID3 tag references.")
-			call = read_attributes_ID3_map[attr]
+			logging.debug("Using ID3 attribute map.")
+			call = ATTRIBUTES.read_attributes_ID3_map[attr]
 
+		logging.debug("Calling audio object with "+call)
 		try:
 			logging.debug("Getting attribute, "+attr+".")
 			attr_ret = self.container[call]
-			logging.debug("Attribute retrieved successfully.")
+			logging.debug("Attribute found on container, {"+str(attr_ret)+"}.")
 		except KeyError:
-			logging.debug("Attribute not found, return {null}.")
+			logging.debug("Attribute not found, {null}.")
 			attr_ret = ""
 
-		return attr_ret
+		logging.debug("Audio container returns "+str(attr_ret)+" from "+attr+"")
+		return str(attr_ret)
 
 
 	def set_attribute(self, attr, value):
+		logging.debug("Attempting to set attribute "+attr+" on container to "+str(value))
 		call = attr
 		if self.file_type in ['mp3']:
-			call = write_attributes_ID3_map[attr]
+			logging.debug("Using ID3 attribute map.")
+			call = ATTRIBUTES.write_attributes_ID3_map[attr]
+			logging.debug("Setting attribute "+attr+" on container.")
 			self._set_attribute_ID3(call, value)
-		elif self.file_type in ['flac','alac']:
+		else:
+			logging.debug("Setting attribute "+attr+" on container.")
 			self.container[call] = value
-			self.container.save()
 
 		try:
-			self.comment = value
-			logging.info("Change successful on "+call+" to "+value)
+			logging.debug("Committing changes to container.")
+			self.container.save(v1=2)
 		except:
 			raise Exception("An unexpected error has occurred")
+
+		self.setattr(self, attr, str(value))
 		return
 
 
 	def _set_attribute_ID3(self, call, value):
 		if call == "COMM":
-			self.container["COMM"] = call_ID3_map[call](encoding=3, lang=u'eng', desc='desc', text=value)
+			self.container["COMM"] = ATTRIBUTES.call_ID3_map[call](encoding=3, lang=u'eng', desc='desc', text=value)
 		else:
-			self.container[call] = call_ID3_map[call](encoding=3, text=value)
-		self.container.save(v1=2)
+			self.container[call] = ATTRIBUTES.call_ID3_map[call](encoding=3, text=value)
 		return
 
 
@@ -86,6 +89,3 @@ class Audio:
 
 		return mutagen.File(f,easy=False)
 
-
-	def _find_file_type(self, filepath):
-		return Path.splitext(Path.basename(filepath))[1].lstrip(".").lower()
