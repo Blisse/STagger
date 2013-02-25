@@ -2,28 +2,48 @@
 # -*- coding: UTF-8 -*-
 
 # imported libs
-import muta
+import Libraries.Muta as MUTA
 import Libraries.Attributes as ATTRIBUTES
 import Libraries.Folders as PATHS
 import Strings.Build as BUILD
+import Strings.Attributes as ATTRSTR
 
 # system libs
 import logging
+import json
+import os
+
+logging.basicConfig(level=BUILD.LOGGER)
 
 class Slave:
-  def __init__(self):
-    self.valid_file_extensions = [u'flac', u'alac', u'mp3']
-    self.filelist = PATHS.search_valid_files(self.valid_file_extensions,BUILD.TEST_DIRECTORY_SLAVE)
+  def __init__(self, readfile):
+    self.readfile = readfile
+    self.filelist = PATHS.search_valid_files(BUILD.TEST_DIRECTORY_SLAVE,BUILD.VALID_FILE_EXTENSIONS)
 
-  def generate_meta_slave(self):
-    for filename in self.filelist:
-      audio_file = muta.Audio(filename)
-      logging.info("Reading file: "+audio_file.file_path)
-      with open(self.writefile,'r') as mpy:
-        slave = mpy.read("$$$FNAME:"+audio_file.file_path+"\n").splitlines()
+
+  def read_meta_master(self):
+    logging.info("Reading file: "+self.readfile)
+    num_attributes = len(ATTRIBUTES.attributes_list)+1
+    with open(self.readfile,'r') as mpy:
+      slave = mpy.read().splitlines()
+
+      if len(slave) % num_attributes != 0:
+        raise Exception("Issued read for invalid master metadata file.")
+
+      for line in range(0, len(slave), num_attributes):
+        logging.debug("Reading line from file:"+slave[line])
+        fname = slave[line]
+        if fname[:9] != ATTRSTR.FNAME_B:
+          raise Exception("Invalid filename. Meta structure may be broken?")
+
+        fname = os.path.join(BUILD.TEST_DIRECTORY_SLAVE.encode('UTF-8'), fname[9:])
+        logging.debug("Fixing file path:"+fname)
+
+
+        for i in range(1,num_attributes):
+          print slave[line+i][2:6]
 
 
 if __name__ == '__main__':
-  test = Slave()
-  for f in test.filelist:
-    print f
+  test = Slave(BUILD.MASTER_META_FILE)
+  test.read_meta_master()

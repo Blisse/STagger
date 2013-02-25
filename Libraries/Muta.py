@@ -4,9 +4,8 @@
 # imported libs
 import mutagen
 from mutagen.id3 import ID3
-import Libraries.Attributes as ATTRIBUTES
-import Libraries.Folders as PATHS
-import Strings.Build as BUILD
+import Attributes as ATTRIBUTES
+import Folders as PATHS
 
 
 # system libs
@@ -16,12 +15,12 @@ import os.path as Path
 
 
 class Audio:
-	def __init__(self, filepath):
+	def __init__(self, filepath, relativepath):
 		filepath = Path.realpath(filepath)
 		self.attributes = ["album","albumartist","artist","comment","date","discnumber","genre","tracknumber","title"]
-		self.file_path = Path.relpath(filepath)
+		self.file_path = Path.relpath(filepath,relativepath)
 		self.file_type = PATHS.find_file_type(self.file_path)
-		self.container = self._create_mutagen()
+		self.container = self._create_mutagen(filepath)
 
 		logging.debug("Mapping audio container attributes to audio object.")
 		for attr in self.attributes:
@@ -79,13 +78,12 @@ class Audio:
 		return
 
 
-	def _create_mutagen(self):
+	def _create_mutagen(self,filepath):
 		t = self.file_type
-		f = self.file_path.decode(u'utf-8')
-
+		f = filepath.decode(u'UTF-8')
 		supported_types = ['mp3','flac','alac']
 		if t not in supported_types:
-			throw('File type not supported.')
+			raise Exception("File type not supported.")
 
 		return mutagen.File(f,easy=False)
 
